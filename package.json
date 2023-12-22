@@ -1,0 +1,17 @@
+{
+  "name": "skript",
+  "version": "1.0.0",
+  "description": "A Skript runner.",
+  "main": "dist/index.js",
+  "repository": "https://github.com/honkling/skript",
+  "author": "honkling",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "yarn build && node dist"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5"
+  }
+}
