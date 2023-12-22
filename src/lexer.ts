@@ -59,11 +59,6 @@ export class TokenType {
 }
 
 export let TokenTypes = {
-    LITERAL_STRING: new TokenType("LITERAL_STRING", /^"(\\\"|[^"])*"/),
-    LITERAL_INTEGER: new TokenType("LITERAL_INTEGER", /^\d+/),
-    LITERAL_NUMBER: new TokenType("LITERAL_NUMBER", /^\d+\.\d+/),
-    LITERAL_BOOLEAN: new TokenType("LITERAL_BOOLEAN", /^(true|false)/),
-
     TAB: new TokenType("TAB", /^( {2,4}|\t)/),
     WHITESPACE: new TokenType("WHITESPACE", /^ +/),
     NEWLINE: new TokenType("NEWLINE", /^\n/),

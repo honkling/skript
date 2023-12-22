@@ -1,11 +1,14 @@
 import { Element } from "./element/element";
+import { Expression } from "./element/expression";
 import { Structure } from "./element/structure";
-import { Lexer, TokenType, TokenTypes } from "./lexer";
+import { Type } from "./element/type";
+import { Lexer, TokenTypes } from "./lexer";
 import { MatchResult } from "./match";
-import { Literal, Optional, Regex, Sentence, Union } from "./pattern/statement";
-import { effects, getRegistryByType, structures } from "./registry";
+import { Expression as PatternExpression, Literal, Optional, Regex, Sentence, Union } from "./pattern/statement";
+import { effects, expressions, structures } from "./registry";
 import { Block } from "./statement/block";
 import { EffectStatement } from "./statement/effect";
+import { ExpressionStatement } from "./statement/expression";
 import { StructureStatement } from "./statement/structure";
 import { TokenStream } from "./stream";
 
@@ -26,13 +29,15 @@ export class Parser {
 
     public parseEffect(): EffectStatement {
         for (const [effect, pattern] of effects.entries()) {
-            if (!this.matchPattern(pattern.compiledPattern))
+            const match = this.matchPattern(pattern.compiledPattern);
+
+            if (!match)
                 continue;
 
             if (!this.stream.isEnd())
                 this.stream.consume().expect(TokenTypes.NEWLINE);
 
-            return new EffectStatement(effect);
+            return new EffectStatement(this, effect, match);
         }
 
         throw new Error("Invalid effect");
@@ -48,7 +53,7 @@ export class Parser {
             this.stream.peek().expect(TokenTypes.SYMBOL_COLON);
 
             const block = this.parseBlock();
-            return new StructureStatement(structure, block, match);
+            return new StructureStatement(this, structure, block, match);
         }
 
         throw new Error("Invalid structure");
@@ -106,8 +111,25 @@ export class Parser {
         return new Block(statements);
     }
 
+    public parseExpression<T>(type: Type<T>, stream: TokenStream): ExpressionStatement<T> {
+        for (const [expression, pattern] of expressions.entries()) {
+            if (expression.getReturnType() !== type.type)
+                continue;
+
+            const match = this.matchPattern(pattern.compiledPattern, stream);
+
+            if (!match)
+                continue;
+
+            return new ExpressionStatement<T>(this, expression as Expression<T>, match);
+        }
+
+        throw new Error("Invalid structure");
+    }
+
     public matchPattern(sentence: Sentence, origin: TokenStream = this.stream): MatchResult | null {
         const stream = origin.branch();
+        const expressions = [];
         const regexes = [];
 
         for (const index in sentence.data) {
@@ -156,10 +178,15 @@ export class Parser {
                 for (const token of tokens)
                     stream.consume().expect(token.type);
             }
+
+            if (first instanceof PatternExpression) {
+                const expression = this.parseExpression(first.data.type, stream);
+                expressions.push(expression);
+            }
         }
 
         origin.merge(stream);
-        return new MatchResult(regexes);
+        return new MatchResult(expressions, regexes);
     }
 
     public constructInput(origin: TokenStream): string {

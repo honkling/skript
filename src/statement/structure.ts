@@ -1,6 +1,7 @@
 import { Structure } from "../element/structure";
 import { MatchResult } from "../match";
 import { Parser } from "../parser";
+import { Pass } from "../pass/pass";
 import { Block } from "./block";
 import { Statement } from "./statement";
 
@@ -14,8 +15,10 @@ export class StructureStatement extends Statement {
         super();
     }
     
-    public visit() {
-        
+    public accept(pass: Pass) {
+        for (const expression of this.match.expressions)
+            expression.accept(pass);
+            
+        this.structure.visit(pass, this);
     }
-
 }

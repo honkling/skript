@@ -1,3 +1,5 @@
+import { Pass } from "../pass/pass";
+
 export class Node {
-    public visit() {}
+    public accept(pass: Pass) {}
 }

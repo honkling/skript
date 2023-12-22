@@ -1,4 +1,6 @@
-import { Literal, Optional, PatternElement, Regex, Sentence, Union } from "./statement";
+import { type } from "os";
+import { types } from "../registry";
+import { Expression, Literal, Optional, PatternElement, Regex, Sentence, Union } from "./statement";
 
 export class Pattern {
     public compiledPattern: Sentence;
@@ -49,6 +51,15 @@ export class Pattern {
 
                 return element;
             }
+            case "%": {
+                const element = this.compileExpression();
+                const char = this.pattern[this.index];
+
+                if (char === " " || char === "\n")
+                    this.index++;
+
+                return element;
+            }
         }
 
         while (this.index < this.pattern.length) {
@@ -62,7 +73,7 @@ export class Pattern {
             if (char === "\\") {
                 const next = this.pattern[this.index + 1];
 
-                if (!"[]()<>|\\".includes(next))
+                if (!"[]()<>|%\\".includes(next))
                     throw new Error("Invalid escape");
 
                 literal += next;
@@ -70,7 +81,7 @@ export class Pattern {
                 continue;
             }
 
-            if ("])|>".includes(char))
+            if ("])|>%".includes(char))
                 break;
 
             literal += char;
@@ -102,6 +113,38 @@ export class Pattern {
         this.index++;
 
         return new Optional(new Sentence(elements));
+    }
+
+    private compileExpression(): Expression {
+        let id = "";
+
+        if (this.pattern[this.index] !== "%")
+            throw new Error("Expected % when parsing expression");
+
+        this.index++;
+        let char;
+
+        while ((char = this.pattern[this.index]) !== "%") {
+            if (!char)
+                throw new Error("Expression is not closed");
+
+            id += char;
+            this.index++;
+        }
+
+        if (char !== "%")
+            throw new Error("Expected % when parsing expression");
+
+        const type = types.get(id);
+        
+        if (!type)
+            throw new Error("Unknown type.");
+
+        this.index++;
+        return new Expression({
+            type: type,
+            plural: id === type.plural
+        });
     }
 
     private compileRegex(): Regex {

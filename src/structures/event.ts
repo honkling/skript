@@ -6,13 +6,17 @@ import { events, register } from "../registry";
 import { Parser } from "../parser";
 import { Lexer, TokenTypes } from "../lexer";
 import { TokenStream } from "../stream";
+import { StructureStatement } from "../statement/structure";
+import { Pass } from "../pass/pass";
 
-export class StructEvent implements Structure {
-    public visit(parser: Parser, result: MatchResult): boolean {
+export default class StructEvent implements Structure {
+    public visit(pass: Pass, statement: StructureStatement): boolean {
+        const { match: result, parser } = statement;
         const name = result.regexes[0][0];
         const [event, match] = this.parseEvent(parser, name);
 
-        event.visit(parser, match);
+        console.log("visiting event");
+        event.visit(pass, statement);
 
         return true;
     }

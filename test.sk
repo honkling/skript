@@ -1,3 +1,2 @@
 on script load:
-    run test effect
-    run test effect
+    run test effect as test expression
