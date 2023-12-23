@@ -29,6 +29,6 @@ export class TokenStream {
     }
 
     public isEnd(): boolean {
-        return this.index + 1 >= this.tokens.length;
+        return this.index >= this.tokens.length;
     }
 }

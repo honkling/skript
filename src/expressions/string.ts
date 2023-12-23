@@ -3,11 +3,14 @@ import { Expression } from "../element/expression";
 import { Integer } from "../integer";
 import { Pass } from "../pass/pass";
 import { register } from "../registry";
+import { ExpressionStatement } from "../statement/expression";
 import { Statement } from "../statement/statement";
 
-export default class ExprTest implements Expression<number> {
-    public get(pass: Pass, statement: Statement): number {
-        return 10;
+export default class ExprString implements Expression<string> {
+    public get(pass: Pass, statement: ExpressionStatement<string>): string[] {
+        const value = statement.match.regexes[0][0].replace(/\\"/g, "\"");
+
+        return [value.substring(1, value.length - 1)];
     }
 
     public getElementType(): ElementType {
@@ -19,10 +22,10 @@ export default class ExprTest implements Expression<number> {
     }
 
     public initialize() {
-        register(this, "test expression");
+        register(this, "<\"(\\\\\"|[^\"])*\">");
     }
 
     public getReturnType(): Function {
-        return Integer;
+        return String;
     }
 }

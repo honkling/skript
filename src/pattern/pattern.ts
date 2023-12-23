@@ -65,6 +65,9 @@ export class Pattern {
         while (this.index < this.pattern.length) {
             const char = this.pattern[this.index];
 
+            if ("[(<|%".includes(char))
+                break;
+
             if (char === " " || char === "\n") {
                 this.index++;
                 break;
@@ -163,12 +166,11 @@ export class Pattern {
             if (char === "\\") {
                 const next = this.pattern[this.index + 1];
 
-                if (!"\\>".includes(next))
-                    throw new Error("Invalid escape");
-
-                regex += next;
-                this.index += 2;
-                continue;
+                if (next === ">") {
+                    regex += next;
+                    this.index += 2;
+                    continue;
+                }
             }
 
             regex += char;

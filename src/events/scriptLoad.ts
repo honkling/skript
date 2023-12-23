@@ -10,7 +10,6 @@ import { StructureStatement } from "../statement/structure";
 
 export default class EvtScriptLoad implements Event {
     public visit(pass: Pass, statement: StructureStatement): boolean {
-        console.log("script load!");
         statement.block.accept(pass);
         return true;
     }

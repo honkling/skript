@@ -113,7 +113,7 @@ export class Parser {
 
     public parseExpression<T>(type: Type<T>, stream: TokenStream): ExpressionStatement<T> {
         for (const [expression, pattern] of expressions.entries()) {
-            if (expression.getReturnType() !== type.type)
+            if (expression.getReturnType() !== type.type && type.type !== Object)
                 continue;
 
             const match = this.matchPattern(pattern.compiledPattern, stream);
@@ -124,7 +124,7 @@ export class Parser {
             return new ExpressionStatement<T>(this, expression as Expression<T>, match);
         }
 
-        throw new Error("Invalid structure");
+        throw new Error("Invalid expression");
     }
 
     public matchPattern(sentence: Sentence, origin: TokenStream = this.stream): MatchResult | null {
@@ -134,7 +134,7 @@ export class Parser {
 
         for (const index in sentence.data) {
             const first = sentence.data[index];
-            const next = sentence.data[parseInt(index) + 1];
+            const next = sentence.data[parseInt(index) + 1]
             
             if (first instanceof Literal) {
                 const token = stream.consume();

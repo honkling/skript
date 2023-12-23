@@ -13,9 +13,8 @@ export default class StructEvent implements Structure {
     public visit(pass: Pass, statement: StructureStatement): boolean {
         const { match: result, parser } = statement;
         const name = result.regexes[0][0];
-        const [event, match] = this.parseEvent(parser, name);
+        const [event] = this.parseEvent(parser, name);
 
-        console.log("visiting event");
         event.visit(pass, statement);
 
         return true;

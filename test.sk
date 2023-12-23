@@ -1,2 +1,9 @@
 on script load:
-    run test effect as test expression
+    print "hello world!"
+    print 123
+    print 123.456
+    print true
+    print false
+
+on script load:
+    print "test"
