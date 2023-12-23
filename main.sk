@@ -1,0 +1,10 @@
+command testsk:
+    trigger:
+        oop_cleanAll()
+
+        set {_input} to "on script load:"
+        set {_lexer} to lexer_new({_input})
+        set {_tokens::*} to lexer_lex({_lexer})
+
+        loop {_tokens::*}:
+            send token_toString(loop-value)

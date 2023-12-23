@@ -1,0 +1,88 @@
+function lexer_new(input: string) :: string:
+    set {_this} to oop_new("lexer")
+    oop_set({_this}, "input", {_input})
+    oop_set({_this}, "index", 0)
+    return {_this}
+
+function lexer_lex(this: string) :: strings:
+    while lexer_isEnd({_this}) is false:
+        set {_token} to lexer_getNextToken({_this})
+
+        if oop_get({_token}, "type") is "WHITESPACE":
+            oop_clean({_token})
+            continue
+
+        add {_token} to {_tokens::*}
+
+    return {_tokens::*}
+
+function lexer_getNextToken(this: string) :: string:
+    set {_rest} to lexer_getRemainingCode({_this})
+
+    if {_rest} starts with "  ":
+        lexer_consume({_this}, 2)
+        return token_new("TAB", "  ")
+    else if {_rest} starts with " ":
+        set {_value} to ""
+
+        while {_rest} starts with " ":
+            set {_value} to "%{_value}% "
+            set {_rest} to subtext of {_rest} from 2 to length of {_rest}
+        
+        lexer_consume({_this}, length of {_value})
+        return token_new("WHITESPACE", {_value})
+    else if {_rest} starts with nl:
+        lexer_consume({_this}, 1)
+        return token_new("NEWLINE", nl)
+    else if {_rest} starts with "(":
+        lexer_consume({_this}, 1)
+        return token_new("SYMBOL_OPEN_PAREN", "(")
+    else if {_rest} starts with ")":
+        lexer_consume({_this}, 1)
+        return token_new("SYMBOL_CLOSE_PAREN", ")")
+    else if {_rest} starts with ":":
+        lexer_consume({_this}, 1)
+        return token_new("SYMBOL_COLON", ":")
+    else if {_rest} starts with "##":
+        set {_value} to ""
+
+        while {_rest} doesn't start with nl:
+            set {_value} to "%{_value}%%first character of {_rest}%"
+            set {_rest} to subtext of {_rest} from 2 to length of {_rest}
+
+        lexer_consume({_this}, length of {_value})
+        return token_new("COMMENT", {_value})
+    else:
+        set {_value} to ""
+
+        while {_rest} doesn't start with " ", "(", ")", "[", "]" or ":":
+            set {_value} to "%{_value}%%first character of {_rest}%"
+            set {_rest} to subtext of {_rest} from 2 to length of {_rest}
+
+        lexer_consume({_this}, length of {_value})
+        return token_new("IDENTIFIER", {_value})
+
+function lexer_consume(this: string, amount: int):
+    set {_newIndex} to oop_get({_this}, "index") + {_amount}
+    oop_set({_this}, "index", {_newIndex})
+
+function lexer_getRemainingCode(this: string) :: string:
+    set {_input} to oop_get({_this}, "input")
+    set {_index} to oop_get({_this}, "index")
+    return subtext of {_input} from {_index} + 1 to length of {_input}
+
+function lexer_isEnd(this: string) :: boolean:
+    set {_index} to oop_get({_this}, "index")
+    set {_length} to length of oop_get({_this}, "input")
+    return true if {_index} >= {_length}, else false
+
+function token_new(type: string, value: string) :: string:
+    set {_this} to oop_new("token")
+    oop_set({_this}, "type", {_type})
+    oop_set({_this}, "value", {_value})
+    return {_this}
+
+function token_toString(this: string) :: string:
+    set {_type} to oop_get({_this}, "type")
+    set {_value} to oop_get({_this}, "value")
+    return "Token(type=%{_type}%, value=%{_value}%)"

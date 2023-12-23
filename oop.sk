@@ -1,0 +1,29 @@
+options:
+    typeField: _
+
+function oop_cleanAll() :: string:
+    delete {-objects::*}
+
+function oop_clean(id: string):
+    delete {-objects::%{_id}%::*}
+
+function oop_new(type: string) :: string:
+    set {_id} to random uuid
+    set {-objects::%{_id}%::{@typeField}} to {_type}
+    return {_id}
+
+function oop_set(id: string, key: string, values: objects):
+    if size of {_values::*} is 1:
+        set {-objects::%{_id}%::%{_key}%} to {_values::1}
+        stop
+
+    set {-objects::%{_id}%::%{_key}%::*} to {_value::*}
+
+function oop_get(id: string, key: string) :: object:
+    return {-objects::%{_id}%::%{_key}%}
+
+function oop_getMany(id: string, key: string) :: objects:
+    return {-objects::%{_id}%::%{_key}%::*}
+
+function oop_type(id: string) :: string:
+    return oop_get({_id}, "{@typeField}")
