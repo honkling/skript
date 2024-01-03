@@ -20,7 +20,6 @@ export class Parser {
 
         while (!this.stream.isEnd()) {
             const structure = this.parseStructure();
-
             structures.push(structure);
         }
 
@@ -51,8 +50,11 @@ export class Parser {
                 continue;
 
             this.stream.peek().expect(TokenTypes.SYMBOL_COLON);
-
             const block = this.parseBlock();
+
+            if (!this.stream.isEnd())
+                this.stream.consume().expect(TokenTypes.NEWLINE);
+
             return new StructureStatement(this, structure, block, match);
         }
 
