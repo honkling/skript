@@ -79,9 +79,12 @@ export class Pattern {
                 if (!"[]()<>|%\\".includes(next))
                     throw new Error("Invalid escape");
 
+                if (literal !== "")
+                    break;
+
                 literal += next;
                 this.index += 2;
-                continue;
+                break;
             }
 
             if ("])|>%".includes(char))

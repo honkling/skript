@@ -1,4 +1,4 @@
-import { ElementType } from "../element/element";
+import { ElementPriority, ElementType } from "../element/element";
 import { Expression } from "../element/expression";
 import { Integer } from "../integer";
 import { Pass } from "../pass/pass";
@@ -7,6 +7,10 @@ import { ExpressionStatement } from "../statement/expression";
 import { Statement } from "../statement/statement";
 
 export default class ExprBoolean implements Expression<boolean> {
+    public getPriority(): ElementPriority {
+        return ElementPriority.NORMAL;
+    }
+
     public get(pass: Pass, statement: ExpressionStatement<boolean>): boolean[] {
         return [statement.match.regexes[0][0] === "true"];
     }

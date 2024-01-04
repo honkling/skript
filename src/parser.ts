@@ -4,6 +4,7 @@ import { Structure } from "./element/structure";
 import { Type } from "./element/type";
 import { Lexer, TokenTypes } from "./lexer";
 import { MatchResult } from "./match";
+import { Pattern } from "./pattern/pattern";
 import { Expression as PatternExpression, Literal, Optional, Regex, Sentence, Union } from "./pattern/statement";
 import { effects, expressions, structures } from "./registry";
 import { Block } from "./statement/block";
@@ -13,7 +14,26 @@ import { StructureStatement } from "./statement/structure";
 import { TokenStream } from "./stream";
 
 export class Parser {
+    public structures = this.sort(structures);
+    public effects = this.sort(effects);
+    public expressions = this.sort(expressions);
+
     constructor(public stream: TokenStream) {}
+
+    public sort<K extends Element, V>(registry: Map<K, V>): [K, V][] {
+        return Array.from(registry.entries())
+            .sort(([a], [b]) => {
+                const priorityA = a.getPriority();
+                const priorityB = b.getPriority();
+
+                if (priorityA < priorityB)
+                    return 1;
+                else if (priorityA === priorityB)
+                    return 0;
+                else if (priorityA > priorityB)
+                    return -1;
+            });
+    }
 
     public parse(): StructureStatement[] {
         const structures = [];
@@ -27,14 +47,17 @@ export class Parser {
     }
 
     public parseEffect(): EffectStatement {
-        for (const [effect, pattern] of effects.entries()) {
+        for (const [effect, pattern] of this.effects) {
             const match = this.matchPattern(pattern.compiledPattern);
 
             if (!match)
                 continue;
 
-            if (!this.stream.isEnd())
-                this.stream.consume().expect(TokenTypes.NEWLINE);
+            if (!this.stream.isEnd()) {
+                if (this.stream.peek().type === TokenTypes.NEWLINE)
+                    this.stream.consume().expect(TokenTypes.NEWLINE);
+                else continue;
+            }
 
             return new EffectStatement(this, effect, match);
         }
@@ -43,7 +66,7 @@ export class Parser {
     }
 
     public parseStructure(): StructureStatement {
-        for (const [structure, pattern] of structures.entries()) {
+        for (const [structure, pattern] of this.structures) {
             const match = this.matchPattern(pattern.compiledPattern);
 
             if (!match)
@@ -114,7 +137,7 @@ export class Parser {
     }
 
     public parseExpression<T>(type: Type<T>, stream: TokenStream): ExpressionStatement<T> {
-        for (const [expression, pattern] of expressions.entries()) {
+        for (const [expression, pattern] of this.expressions) {
             if (expression.getReturnType() !== type.type && type.type !== Object)
                 continue;
 

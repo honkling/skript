@@ -1,9 +1,5 @@
-on script load:
-    print "hello world!"
-    print 123
-    print 123.456
-    print true
-    print false
+function helloWorld():
+    print "hello world!!!"
 
 on script load:
-    print "test"
+    helloWorld()

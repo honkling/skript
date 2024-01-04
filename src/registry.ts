@@ -26,15 +26,20 @@ export async function registerAll(...directories: string[]) {
         const names = readdirSync(directoryPath);
 
         for (const name of names) {
-            const path = join(directoryPath, name);
-            const exports = await import(path);
-            const clazz = exports.default;
-
-            if (!clazz)
-                continue;
-
-            const instance = new clazz.default();
-            instance.initialize();
+            try {
+                const path = join(directoryPath, name);
+                const exports = await import(path);
+                const clazz = exports.default;
+    
+                if (!clazz)
+                    continue;
+    
+                const instance = new clazz.default();
+                instance.initialize();
+            } catch (e) {
+                console.error(`An error occurred registering syntax '${directory}/${name}'`);
+                throw e;
+            }
         }
     }
 }

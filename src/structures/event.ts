@@ -1,4 +1,4 @@
-import { ElementType } from "../element/element";
+import { ElementPriority, ElementType } from "../element/element";
 import { Structure } from "../element/structure";
 import { Event } from "../element/event";
 import { MatchResult } from "../match";
@@ -10,6 +10,10 @@ import { StructureStatement } from "../statement/structure";
 import { Pass } from "../pass/pass";
 
 export default class StructEvent implements Structure {
+    public getPriority(): ElementPriority {
+        return ElementPriority.LOW;
+    }
+
     public visit(pass: Pass, statement: StructureStatement): boolean {
         const { match: result, parser } = statement;
         const name = result.regexes[0][0];
