@@ -18,16 +18,25 @@ export class Position {
     }
 
     public advance(amount: number) {
+        // Forward: function test():
+        // Advance: 8
+
         const { file } = logger;
         let advance = file.input.substring(this.index, this.index + amount);
         let index;
     
         this.index += amount;
+
+        // console.log(`Advancing by`, amount);
+        // console.log(`Advanced:`, advance);
+        // console.log(`Rest:`, file.input.substring(this.index));
         
         while ((index = advance.indexOf("\n")) !== -1) {
-            advance = advance.substring(index);
+            advance = advance.substring(index + 1);
             this.line++;
         }
+
+        // console.log(`${this.line}:${this.column}`);
     
         this.column = advance.length;
     }

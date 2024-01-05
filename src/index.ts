@@ -26,7 +26,8 @@ const input = readFileSync(path, "utf8");
     const parser = new Parser(stream);
     const structures = parser.parse();
 
-    logger.release();
+    if (logger.release())
+        return;
     
     const passes = new PassManager();
     passes.register(new DefaultPass());

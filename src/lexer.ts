@@ -10,6 +10,10 @@ export class Lexer {
 
         while (this.index < this.input.length) {
             const token = this.getNextToken();
+
+            if (!token)
+                break;
+
             this.index += token.value.length;
             logger.position.advance(token.value.length);
 
@@ -30,6 +34,7 @@ export class Lexer {
         }
 
         logger.error(`Unexpected token found.`);
+        return null;
     }
 }
 

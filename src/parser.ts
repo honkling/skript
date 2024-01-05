@@ -39,6 +39,10 @@ export class Parser {
 
         while (!this.stream.isEnd()) {
             const structure = this.parseStructure();
+
+            if (!structure)
+                continue;
+
             structures.push(structure);
         }
 
@@ -62,6 +66,7 @@ export class Parser {
         }
 
         logger.error("Invalid effect");
+        return null;
     }
 
     public parseStructure(parent?: Block): StructureStatement {
@@ -81,6 +86,7 @@ export class Parser {
         }
 
         logger.error("Invalid structure");
+        return null;
     }
 
     public parseBlock(parent?: Block): Block {
@@ -113,8 +119,10 @@ export class Parser {
                 if (badEffect)
                     break;
 
-                if (this.stream.peek().type === TokenTypes.TAB)
+                if (this.stream.peek().type === TokenTypes.TAB) {
                     logger.error(`Invalid indentation, expected ${indentation} tabs, found more`);
+                    break;
+                }
             }
 
             if (indentation === 0)
@@ -129,6 +137,17 @@ export class Parser {
             }
 
             const statement = this.parseEffect(block);
+
+            if (!statement) {
+                while (!this.stream.isEnd() && this.stream.peek().type !== TokenTypes.NEWLINE)
+                    this.stream.consume();
+
+                if (!this.stream.isEnd())
+                    this.stream.consume().expect(TokenTypes.NEWLINE);
+
+                continue;
+            }
+
             block.statements.push(statement);
         }
 
@@ -149,6 +168,7 @@ export class Parser {
         }
 
         logger.error("Invalid expression");
+        return null;
     }
 
     public matchPattern(sentence: Sentence, parent?: Block, origin: TokenStream = this.stream): MatchResult | null {
@@ -209,6 +229,10 @@ export class Parser {
 
             if (first instanceof PatternExpression) {
                 const expression = this.parseExpression(first.data.type, stream, parent);
+
+                if (!expression)
+                    break;
+
                 expressions.push(expression);
             }
         }
