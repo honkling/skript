@@ -8,6 +8,7 @@ import { Lexer, TokenTypes } from "../lexer";
 import { TokenStream } from "../stream";
 import { StructureStatement } from "../statement/structure";
 import { Pass } from "../pass/pass";
+import { Block } from "../statement/block";
 
 export default class StructEvent implements Structure {
     public getPriority(): ElementPriority {
@@ -39,7 +40,7 @@ export default class StructEvent implements Structure {
         const stream = new TokenStream(tokens);
 
         for (const [event, pattern] of events.entries()) {
-            const match = parser.matchPattern(pattern.compiledPattern, stream)
+            const match = parser.matchPattern(pattern.compiledPattern, null, stream)
 
             if (!match)
                 continue;

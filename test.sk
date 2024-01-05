@@ -3,3 +3,5 @@ function helloWorld():
 
 on script load:
     helloWorld()
+    set {_test} to "test"
+    prinat {_test}

@@ -1,10 +1,9 @@
 import { Element } from "./element/element";
 import { Expression } from "./element/expression";
-import { Structure } from "./element/structure";
 import { Type } from "./element/type";
 import { Lexer, TokenTypes } from "./lexer";
+import { logger } from "./logger";
 import { MatchResult } from "./match";
-import { Pattern } from "./pattern/pattern";
 import { Expression as PatternExpression, Literal, Optional, Regex, Sentence, Union } from "./pattern/statement";
 import { effects, expressions, structures } from "./registry";
 import { Block } from "./statement/block";
@@ -46,9 +45,9 @@ export class Parser {
         return structures;
     }
 
-    public parseEffect(): EffectStatement {
+    public parseEffect(parent: Block): EffectStatement {
         for (const [effect, pattern] of this.effects) {
-            const match = this.matchPattern(pattern.compiledPattern);
+            const match = this.matchPattern(pattern.compiledPattern, parent);
 
             if (!match)
                 continue;
@@ -59,15 +58,15 @@ export class Parser {
                 else continue;
             }
 
-            return new EffectStatement(this, effect, match);
+            return new EffectStatement(this, effect, match, parent);
         }
 
-        throw new Error("Invalid effect");
+        logger.error("Invalid effect");
     }
 
-    public parseStructure(): StructureStatement {
+    public parseStructure(parent?: Block): StructureStatement {
         for (const [structure, pattern] of this.structures) {
-            const match = this.matchPattern(pattern.compiledPattern);
+            const match = this.matchPattern(pattern.compiledPattern, parent);
 
             if (!match)
                 continue;
@@ -78,14 +77,14 @@ export class Parser {
             if (!this.stream.isEnd())
                 this.stream.consume().expect(TokenTypes.NEWLINE);
 
-            return new StructureStatement(this, structure, block, match);
+            return new StructureStatement(this, structure, block, match, parent);
         }
 
-        throw new Error("Invalid structure");
+        logger.error("Invalid structure");
     }
 
-    public parseBlock(): Block {
-        const statements = [];
+    public parseBlock(parent?: Block): Block {
+        const block = new Block([], parent);
         let indentation = 0;
 
         this.stream.consume().expect(TokenTypes.SYMBOL_COLON);
@@ -95,7 +94,7 @@ export class Parser {
         
         if (this.stream.isEnd() || this.stream.peek().type !== TokenTypes.TAB) {
             console.log("[WARN] Empty block");
-            return new Block(statements);
+            return block;
         }
 
         while (!this.stream.isEnd() && this.stream.peek().type === TokenTypes.TAB) {
@@ -115,7 +114,7 @@ export class Parser {
                     break;
 
                 if (this.stream.peek().type === TokenTypes.TAB)
-                    throw new Error(`Invalid indentation, expected ${indentation} tabs, found more`);
+                    logger.error(`Invalid indentation, expected ${indentation} tabs, found more`);
             }
 
             if (indentation === 0)
@@ -125,51 +124,54 @@ export class Parser {
                 }
 
             if (indentation === 0) {
-                console.log("[WARN] Empty block");
-                return new Block([]);
+                logger.warn("Empty block");
+                return block;
             }
 
-            const statement = this.parseEffect();
-            statements.push(statement);
+            const statement = this.parseEffect(block);
+            block.statements.push(statement);
         }
 
-        return new Block(statements);
+        return block;
     }
 
-    public parseExpression<T>(type: Type<T>, stream: TokenStream): ExpressionStatement<T> {
+    public parseExpression<T>(type: Type<T>, stream: TokenStream, parent: Block): ExpressionStatement<T> {
         for (const [expression, pattern] of this.expressions) {
             if (expression.getReturnType() !== type.type && type.type !== Object)
                 continue;
 
-            const match = this.matchPattern(pattern.compiledPattern, stream);
+            const match = this.matchPattern(pattern.compiledPattern, parent, stream);
 
             if (!match)
                 continue;
 
-            return new ExpressionStatement<T>(this, expression as Expression<T>, match);
+            return new ExpressionStatement<T>(this, expression as Expression<T>, match, parent);
         }
 
-        throw new Error("Invalid expression");
+        logger.error("Invalid expression");
     }
 
-    public matchPattern(sentence: Sentence, origin: TokenStream = this.stream): MatchResult | null {
+    public matchPattern(sentence: Sentence, parent?: Block, origin: TokenStream = this.stream): MatchResult | null {
         const stream = origin.branch();
         const expressions = [];
         const regexes = [];
+        const loggerPosition = logger.position.branch();
 
         for (const index in sentence.data) {
             const first = sentence.data[index];
-            const next = sentence.data[parseInt(index) + 1]
+            const next = sentence.data[parseInt(index) + 1];
             
             if (first instanceof Literal) {
                 const token = stream.consume();
 
                 if (first.data != token.value)
                     return null;
+
+                loggerPosition.advance(token.value.length);
             }
 
             if (first instanceof Optional) {
-                if (!this.matchPattern(first.data, stream) && !this.matchPattern(next.data, stream))
+                if (!this.matchPattern(first.data, parent, stream) && !this.matchPattern(next.data, parent, stream))
                     return null;
             }
 
@@ -177,7 +179,7 @@ export class Parser {
                 let matched = false;
 
                 for (const sentence of first.data) {
-                    if (this.matchPattern(sentence, stream)) {
+                    if (this.matchPattern(sentence, parent, stream)) {
                         matched = true;
                         break;
                     }
@@ -195,6 +197,7 @@ export class Parser {
                     return null;
 
                 regexes.push(match);
+                loggerPosition.advance(match[0].length);
 
                 const tokens = new Lexer(match[0])
                     .lex()
@@ -205,11 +208,12 @@ export class Parser {
             }
 
             if (first instanceof PatternExpression) {
-                const expression = this.parseExpression(first.data.type, stream);
+                const expression = this.parseExpression(first.data.type, stream, parent);
                 expressions.push(expression);
             }
         }
 
+        logger.position.merge(loggerPosition);
         origin.merge(stream);
         return new MatchResult(expressions, regexes);
     }

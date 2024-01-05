@@ -1,6 +1,6 @@
+import { logger } from "./logger";
+
 export class Lexer {
-    public line = 1;
-    public col = 1;
     public index = 0;
 
     constructor(public input: string) {}
@@ -11,11 +11,7 @@ export class Lexer {
         while (this.index < this.input.length) {
             const token = this.getNextToken();
             this.index += token.value.length;
-
-            if (token.type === TokenTypes.NEWLINE) {
-                this.line++;
-                this.col = 1;
-            }
+            logger.position.advance(token.value.length);
 
             tokens.push(token);
         }
@@ -33,7 +29,7 @@ export class Lexer {
                 return new Token(type, match[0]);
         }
 
-        throw new Error(`Unexpected token found (${this.line}:${this.col})`);
+        logger.error(`Unexpected token found.`);
     }
 }
 
@@ -45,7 +41,7 @@ export class Token {
 
     public expect(type: TokenType): Token {
         if (this.type !== type)
-            throw new Error(`Expected ${type.name}, got ${this.type.name}`);
+            logger.error(`Expected ${type.name}, got ${this.type.name}`);
 
         return this;
     }
@@ -65,9 +61,11 @@ export let TokenTypes = {
 
     SYMBOL_OPEN_PAREN: new TokenType("SYMBOL_OPEN_PAREN", /^\(/),
     SYMBOL_CLOSE_PAREN: new TokenType("SYMBOL_CLOSE_PAREN", /^\)/),
+    SYMBOL_OPEN_BRACE: new TokenType("SYMBOL_OPEN_BRACE", /^\{/),
+    SYMBOL_CLOSE_BRACE: new TokenType("SYMBOL_CLOSE_BRACE", /^\}/),
     SYMBOL_EQUALS: new TokenType("SYMBOL_EQUALS", /^=/),
     SYMBOL_COLON: new TokenType("SYMBOL_COLON", /^:/),
 
     COMMENT: new TokenType("COMMENT", /^#.*/),
-    IDENTIFIER: new TokenType("IDENTIFIER", /^[^\s()[\]=:]+/)
+    IDENTIFIER: new TokenType("IDENTIFIER", /^[^\s()[\]{}=:]+/)
 };

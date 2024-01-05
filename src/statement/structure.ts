@@ -10,9 +10,10 @@ export class StructureStatement extends Statement {
         public parser: Parser,
         public structure: Structure,
         public block: Block,
-        public match: MatchResult
+        public match: MatchResult,
+        public parent: Block
     ) {
-        super();
+        super(parent);
     }
     
     public accept(pass: Pass) {

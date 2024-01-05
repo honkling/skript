@@ -55,6 +55,11 @@ export function registerType(type: Type<unknown>) {
     types.set(type.plural, type);
 }
 
+export function getTypeByConstructor(constructor: Function): Type<unknown> {
+    return Array.from(types.values())
+        .find((t) => t.type === constructor);
+}
+
 export const expressions = new Map<Expression<unknown>, Pattern>();
 export const structures = new Map<Structure, Pattern>();
 export const types = new Map<string, Type<unknown>>();
