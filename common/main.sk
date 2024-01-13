@@ -1,0 +1,2 @@
+on script load:
+    print "hello world! hello minehut!"
