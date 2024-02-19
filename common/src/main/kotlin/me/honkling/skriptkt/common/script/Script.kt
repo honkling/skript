@@ -19,6 +19,7 @@ data class Script(val file: File) {
 
     fun reload(): ParseResult {
         // Reset script for reloading
+        Skript.listeners.clearListeners(this)
         exportedSymbols.clear()
 
         // Reset output
@@ -42,7 +43,7 @@ data class Script(val file: File) {
     private fun parse(stream: TokenStream): ParseResult {
         val parser = Parser(this, stream)
         Skript.parser = parser
-        Skript.currentlyParsing = file
+        Skript.currentlyParsing = this
         return parser.parse()
     }
 }

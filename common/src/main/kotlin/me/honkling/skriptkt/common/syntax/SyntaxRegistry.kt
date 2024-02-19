@@ -10,7 +10,8 @@ class SyntaxRegistry {
     val patterns = mutableMapOf<Class<out SyntaxElement>, Sentence>()
     val expressions = mutableListOf<Class<out Expression<*>>>()
     val structures = mutableListOf<Class<out Structure>>()
-    val events = mutableListOf<Class<out Event<*,>>>()
+    val sections = mutableListOf<Class<out Section>>()
+    val events = mutableListOf<Class<out Event<*>>>()
     val effects = mutableListOf<Class<out Effect>>()
     val types = mutableMapOf<String, Type<*>>()
 
@@ -22,6 +23,10 @@ class SyntaxRegistry {
         when {
             Event::class.java.isAssignableFrom(syntaxElement) -> {
                 events.add(syntaxElement as Class<out Event<*>>)
+            }
+
+            Section::class.java.isAssignableFrom(syntaxElement) -> {
+                sections.add(syntaxElement as Class<out Section>)
             }
 
             Structure::class.java.isAssignableFrom(syntaxElement) -> {
@@ -54,6 +59,7 @@ class SyntaxRegistry {
 
         expressions.sortBy(::getPriority)
         structures.sortBy(::getPriority)
+        sections.sortBy(::getPriority)
         effects.sortBy(::getPriority)
         events.sortBy(::getPriority)
     }

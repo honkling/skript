@@ -1,2 +1,9 @@
+pluginManagement {
+    repositories {
+        maven(url = "https://maven.fabricmc.net/")
+        gradlePluginPortal()
+    }
+}
+
 rootProject.name = "SkriptKt"
-include("common")
+include("common", "fabric", "cli")

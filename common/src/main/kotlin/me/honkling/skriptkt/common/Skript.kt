@@ -2,6 +2,7 @@ package me.honkling.skriptkt.common
 
 import me.honkling.skriptkt.common.events.EventHandler
 import me.honkling.skriptkt.common.parser.Parser
+import me.honkling.skriptkt.common.script.Script
 import me.honkling.skriptkt.common.script.ScriptManager
 import me.honkling.skriptkt.common.syntax.SyntaxRegistry
 import java.io.File
@@ -12,7 +13,7 @@ object Skript : SkriptAddon() {
     val listeners = EventHandler()
 
     // Parsing
-    lateinit var currentlyParsing: File
+    lateinit var currentlyParsing: Script
     lateinit var parser: Parser
 
     // Addons / syntax
@@ -26,7 +27,8 @@ object Skript : SkriptAddon() {
             "structures",
             "events",
             "effects",
-            "expressions"
+            "expressions",
+            "sections"
         )
     }
 

@@ -25,7 +25,7 @@ fun getClassesInPackage(instanceClass: Class<*>, pkg: String, predicate: (Class<
     val classes = mutableListOf<Class<*>>()
     val directory = pkg.replace('.', '/')
 
-    me.honkling.skriptkt.common.lib.scanJar(
+    scanJar(
         instanceClass,
         { n -> n.startsWith(directory) && n.endsWith(".class") && "$" !in n }) { _, entryName ->
         val clazz = instanceClass.classLoader.loadClass(

@@ -8,7 +8,7 @@ import me.honkling.skriptkt.common.syntax.Effect
 
 class EffectStatement(
     parser: Parser,
-    parent: Block?,
+    parent: Block,
     val effect: Effect,
     matchResult: PatternMatchResult
 ) : Statement(parser, parent, matchResult) {

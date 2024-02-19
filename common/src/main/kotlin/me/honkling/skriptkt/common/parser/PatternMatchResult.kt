@@ -5,5 +5,6 @@ import kotlin.text.MatchResult
 
 data class PatternMatchResult(
     val regexes: List<MatchResult>,
-    val expressions: List<ExpressionStatement<*>>
+    val expressions: List<ExpressionStatement<*>>,
+    val tags: List<String>
 )

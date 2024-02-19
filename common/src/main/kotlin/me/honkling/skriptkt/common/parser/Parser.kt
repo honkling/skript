@@ -13,10 +13,7 @@ import me.honkling.skriptkt.common.output.emittedWarnings
 import me.honkling.skriptkt.common.pattern.element.*
 import me.honkling.skriptkt.common.pattern.element.Expression
 import me.honkling.skriptkt.common.script.Script
-import me.honkling.skriptkt.common.statement.EffectStatement
-import me.honkling.skriptkt.common.statement.ExpressionStatement
-import me.honkling.skriptkt.common.statement.Statement
-import me.honkling.skriptkt.common.statement.StructureStatement
+import me.honkling.skriptkt.common.statement.*
 import me.honkling.skriptkt.common.syntax.Expression as SyntaxExpression
 import me.honkling.skriptkt.common.syntax.*
 
@@ -60,6 +57,27 @@ class Parser(val script: Script, val stream: TokenStream) {
         }
 
         return StructureStatement(this, script, structure.construct() as Structure, block, match)
+    }
+
+    private fun parseSection(parent: Block): SectionStatement? {
+        val sections = Skript.syntaxRegistry.sections
+        val result = parseSyntaxElement(sections, parent)
+
+        if (result == null) {
+            emitError("Invalid section.")
+            return null
+        }
+
+        val (section, match) = result
+        val block = parseBlock(null)
+
+        if (block == null) {
+            emitError("Invalid section. Does the section contain errors?")
+            skipBlock()
+            return null
+        }
+
+        return SectionStatement(this, parent, section.construct() as Section, block, match)
     }
 
     private fun parseBlock(parent: Block?): Block? {
@@ -128,7 +146,7 @@ class Parser(val script: Script, val stream: TokenStream) {
         return block
     }
 
-    private fun parseEffect(parent: Block?): EffectStatement? {
+    private fun parseEffect(parent: Block): EffectStatement? {
         val effects = Skript.syntaxRegistry.effects
         val result = parseSyntaxElement(effects, parent)
 
@@ -178,6 +196,7 @@ class Parser(val script: Script, val stream: TokenStream) {
     private fun matchPattern(pattern: Sentence, parent: Block?, stream: TokenStream = this.stream): PatternMatchResult? {
         val expressions = mutableListOf<ExpressionStatement<*>>()
         val regexes = mutableListOf<MatchResult>()
+        val tags = mutableListOf<String>()
         val branch = stream.branch()
 
         top@for (patternElement in pattern.elements) {
@@ -203,12 +222,19 @@ class Parser(val script: Script, val stream: TokenStream) {
                 is Optional -> {
                     val match = matchPattern(patternElement.sentence, parent, branch) ?: continue
                     regexes += match.regexes
+                    expressions += match.expressions
+                    tags += match.tags
                 }
 
                 is Choice -> {
-                    for (choice in patternElement.choices) {
+                    for ((choice, tag) in patternElement.choices) {
                         val match = matchPattern(choice, parent, branch) ?: continue
+
                         regexes += match.regexes
+                        expressions += match.expressions
+                        if (tag != null)
+                            tags += tag
+
                         continue@top
                     }
 
@@ -251,7 +277,7 @@ class Parser(val script: Script, val stream: TokenStream) {
         }
 
         stream.merge(branch)
-        return PatternMatchResult(regexes, expressions)
+        return PatternMatchResult(regexes, expressions, tags)
     }
 
     private fun constructInput(stream: TokenStream): String {

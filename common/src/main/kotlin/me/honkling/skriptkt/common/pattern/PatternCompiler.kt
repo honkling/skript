@@ -2,6 +2,7 @@ package me.honkling.skriptkt.common.pattern
 
 import me.honkling.skriptkt.common.Skript
 import me.honkling.skriptkt.common.pattern.element.*
+import kotlin.math.min
 
 fun compilePattern(pattern: String, vararg breakIf: Char): Sentence {
     val elements = mutableListOf<PatternElement>()
@@ -116,12 +117,29 @@ private fun compileChoice(pattern: String, originalIndex: Int): Choice {
     if (pattern[originalIndex] != '(')
         throw IllegalArgumentException("Expected '(', found '${pattern[originalIndex]}'")
 
-    val choices = mutableListOf<Sentence>()
+    val choices = mutableMapOf<Sentence, String?>()
     var index = originalIndex
 
     while (pattern[index] == '|' || index == originalIndex) {
         index++
-        choices += compilePattern(pattern.substring(index), '|', ')')
+
+        var tag: String? = null
+        var oldIndex = index
+
+        while (pattern[index] != '|' && pattern[index] != ')') {
+            if (pattern[index] == ':') {
+                tag = pattern.substring(oldIndex, index)
+                index++
+                break
+            }
+
+            index++
+        }
+
+        if (tag == null)
+            index = oldIndex
+
+        choices[compilePattern(pattern.substring(index), '|', ')')] = tag
     }
 
     return Choice(choices)

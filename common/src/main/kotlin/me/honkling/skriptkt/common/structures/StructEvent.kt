@@ -30,7 +30,7 @@ class StructEvent : Structure() {
         }
 
         this.event = event
-        Skript.listeners.registerListener(event.event, statement)
+        Skript.listeners.registerListener(Skript.currentlyParsing, event.event, statement)
         return true
     }
 
